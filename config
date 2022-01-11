@@ -1,0 +1,14 @@
+#vim: set ft=sh et:
+ngx_addon_name=ngx_http_cookie_encrypt_module
+
+ngx_module_type=HTTP_FILTER
+ngx_module_name="$ngx_addon_name"
+ngx_module_srcs="$ngx_addon_dir/cookie_encrypt_module.c $ngx_addon_dir/cookie_encrypt_misc.c"
+ngx_module_deps="$ngx_addon_dir/cookie_encrypt_misc.h"
+
+. auto/module
+
+next=ngx_http_charset_filter_module
+HTTP_FILTER_MODULES=`echo $HTTP_FILTER_MODULES \
+                     | sed "s/$ngx_module_name//" \
+                     | sed "s/$next/$next $ngx_module_name/"`
