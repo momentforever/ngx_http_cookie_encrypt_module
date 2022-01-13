@@ -100,41 +100,46 @@ static ngx_int_t ngx_cookie_decrypt_handler(ngx_http_request_t *r) {
 
                 ngx_str_t cookie_s = ngx_string(elt[i].value.data);
 
-                int i;
+                int ii;
+                int begin = 0;
                 int start = -1;
                 int end = -1;
                 int len = (int) ngx_strlen(cookie_s.data);
-                u_char *cp, *encrypt_cookie;
-
-                encrypt_cookie = ngx_pnalloc(r->pool, 1024);
+                u_char *encrypt_cookie;
+                encrypt_cookie = ngx_pcalloc(r->pool, 1024);
                 if (encrypt_cookie == NULL) {
                     return NGX_ERROR;
                 }
+                u_char *cp =encrypt_cookie;
 
                 ngx_str_t cookie_arg = ngx_string("cookie_decrypt");
 
-                for (i = 0; i < len; ++i) {
-                    if (i == len - 1) {
+                for (ii = 0; ii < len; ++ii) {
+                    if (ii == len - 1) {
                         end = len - 1;
                     }
-                    if (cookie_s.data[i] == '=') {
-                        start = i + 1;
+                    if (cookie_s.data[ii] == '=' && start == -1) {
+                        start = ii + 1;
                     }
-                    if (cookie_s.data[i] == ';') {
-                        end = i - 1;
-                        break;
+                    if (cookie_s.data[ii] == ';') {
+                        end = ii - 1;
+                    }
+                    if (start != -1 && end != -1) {
+                        printf(" start -> %d , end -> %d \n",start,end);
+                        cp = ngx_copy(cp, cookie_s.data + begin, start - begin);
+                        // 加密
+                        // 加密 end
+                        cp = ngx_copy(cp, cookie_arg.data, cookie_arg.len);
+                        printf( "replacing decrypt cookie -> %s\n",encrypt_cookie);
+                        begin = start + 1;
+                        end = -1;
+                        start = -1;
                     }
                 }
-                //printf(" start -> %d , end -> %d \n",start,end);
-                if (start != -1 && end != -1) {
-                    cp = ngx_copy(encrypt_cookie, cookie_s.data, start);
-                    // 加密
-                    // 加密 end
-                    cp = ngx_copy(cp, cookie_arg.data, cookie_arg.len);
-                    cp = ngx_copy(cp, cookie_s.data + end + 1, len - end);
-                    ngx_str_set(&elt[i].value, encrypt_cookie);
-                }
-                //printf( "finish decrypt cookie -> %s\n",elt[i].value.data);
+
+                ngx_str_set(&elt[i].value, encrypt_cookie);
+                elt[i].value.len = ngx_strlen(encrypt_cookie);
+                printf( "finish decrypt cookie -> %s\n",encrypt_cookie);
             }
             //ngx_log_error(NGX_LOG_ERR,r->connection->log,0,"%s -> %s",elt[i].key.data,elt[i].value.data);
         }
@@ -198,7 +203,6 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r) {
                 if (cookie_arg.data == NULL) {
                     return NGX_ERROR;
                 }
-
                 for (ii = 0; ii < len; ii++) {
                     if (ii == len - 1) {
                         end = len - 1;
