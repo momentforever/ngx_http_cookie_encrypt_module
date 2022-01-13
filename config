@@ -7,8 +7,3 @@ ngx_module_srcs="$ngx_addon_dir/cookie_encrypt_module.c $ngx_addon_dir/cookie_en
 ngx_module_deps="$ngx_addon_dir/cookie_encrypt_misc.h"
 
 . auto/module
-
-next=ngx_http_charset_filter_module
-HTTP_FILTER_MODULES=`echo $HTTP_FILTER_MODULES \
-                     | sed "s/$ngx_module_name//" \
-                     | sed "s/$next/$next $ngx_module_name/"`
