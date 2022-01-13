@@ -177,24 +177,24 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r) {
                 int end = -1;
                 u_char *cp;
 
-                u_char *encrypt_cookie = ngx_pnalloc(r->pool, 1024);
+                u_char *encrypt_cookie = ngx_pcalloc(r->pool, 1024);
                 if (encrypt_cookie == NULL) {
                     return NGX_ERROR;
                 }
                 //ngx_str_t cookie_arg = ngx_string("cookie_encrypt");
                 ngx_str_t cookie_arg_encode;
-                cookie_arg_encode.data = ngx_pnalloc(r->pool, 1024);
+                cookie_arg_encode.data = ngx_pcalloc(r->pool, 1024);
                 if (cookie_arg_encode.data == NULL) {
                     return NGX_ERROR;
                 }
                 ngx_str_t cookie_arg_encrypt;
-                cookie_arg_encrypt.data = ngx_pnalloc(r->pool, 1024);
+                cookie_arg_encrypt.data = ngx_pcalloc(r->pool, 1024);
                 if (cookie_arg_encrypt.data == NULL) {
                     return NGX_ERROR;
                 }
                 u_char *cap;
                 ngx_str_t cookie_arg;
-                cookie_arg.data = ngx_pnalloc(r->pool, 1024);
+                cookie_arg.data = ngx_pcalloc(r->pool, 1024);
                 if (cookie_arg.data == NULL) {
                     return NGX_ERROR;
                 }
@@ -203,7 +203,7 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r) {
                     if (ii == len - 1) {
                         end = len - 1;
                     }
-                    if (cookie_s.data[ii] == '=') {
+                    if (cookie_s.data[ii] == '=' && start == -1) {
                         start = ii + 1;
                     }
                     if (cookie_s.data[ii] == ';') {
@@ -219,7 +219,6 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r) {
                     cookie_arg.len = end - start + 1;
                     cap = ngx_cpymem(cookie_arg.data, cookie_s.data + start, cookie_arg.len);
                     ngx_memcpy(cap, "\0", 1);
-
                     //printf("cookie_arg -> %s\n",cookie_arg.data);
                     aes_encrypt(cookie_arg.data, cookie_arg_encrypt.data, (u_char *) KEY, (u_char *) IV);
                     cookie_arg_encrypt.len = ngx_strlen(cookie_arg_encrypt.data);
@@ -227,10 +226,10 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r) {
                     // 编码
                     base64_encode(cookie_arg_encrypt.data, cookie_arg_encode.data);
                     cookie_arg_encode.len = ngx_strlen(cookie_arg_encode.data);
-
+                    //printf("cookie_arg_encode -> %s",cookie_arg_encode.data);
                     // 编码 end
                     // 拷贝
-                    cp = ngx_copy(cp, cookie_arg_encode.data, cookie_arg_encode.len);
+                    cp = ngx_copy(cp, cookie_arg_encode.data, cookie_arg_encode.len - 1);
                     // 拷贝 end
                     cp = ngx_copy(cp, cookie_s.data + end + 1, len - end);
 
