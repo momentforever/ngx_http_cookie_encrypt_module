@@ -171,7 +171,7 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r){
                 ngx_str_t cookie_s = ngx_string(elt[i].value.data);
                 int len = (int)ngx_strlen(cookie_s.data);
                 cookie_s.len = len;
-                int i;
+                int ii = 0;
                 int start = -1;
                 int end = -1;
                 u_char *cp;
@@ -198,15 +198,15 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r){
                     return NGX_ERROR;
                 }
 
-                for(i = 0;i < len ; ++i){
-                    if(i == len - 1){
+                for(ii = 0;ii < len ;i ++i){
+                    if(ii == len - 1){
                         end = len - 1;
                     }
                     if(cookie_s.data[i] == '='){
-                        start = i+1;
+                        start = ii+1;
                     }
                     if(cookie_s.data[i] == ';'){
-                        end = i-1;
+                        end = ii-1;
                         break;
                     }
                 }
