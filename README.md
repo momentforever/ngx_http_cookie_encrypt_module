@@ -10,11 +10,20 @@ Using AES encryption algorithm, only cbc mode is supported now, and it will be e
 
 ## Usage
 
+### Example
 ```conf
-location {
+location / {
   cookie_encrypt on/off;
 }
 ```
+
+### Default
+
+```conf
+cookie_encrypt off;
+```
+
+### Context
 
 http -> server -> location
 
