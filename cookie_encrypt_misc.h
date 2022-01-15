@@ -1,6 +1,11 @@
-//
-// Created by lzt11 on 2022/1/11.
-//
+/*
+ * @Author: lzt
+ * @Date: 2022-1-15 17:34
+ * @LastEditTime: 2022-1-15 17:34
+ * @LastEditors: lzt
+ * @Description: save small tools func.
+ * @FilePath: /nginx-cookie-encrypt-module/cookie_encrypt_misc.c
+ */
 
 #ifndef NGINX_DEV_COOKIE_ENCRYPT_MISC_H
 #define NGINX_DEV_COOKIE_ENCRYPT_MISC_H
@@ -24,8 +29,5 @@ int base64_encode(unsigned char *in_str,unsigned char *out_str);
 #define IV_BLOCK_BIT 17
 #define KEY "E10ADC3949BA59ABBE56E056F20F883E"
 #define IV "E10ADC3949BA59AB"
-//extern unsigned char key[KEY_BLOCK_BIT] = "E10ADC3949BA59ABBE56E056F20F883E"; ///usr/include/openssl/aes.h:# define AES_BLOCK_SIZE 16
-//extern unsigned char iv[IV_BLOCK_BIT] = "E10ADC3949BA59AB";
 #define ENCRYPTBUFSIZE 1024
-
 #endif //NGINX_DEV_COOKIE_ENCRYPT_MISC_H

@@ -1,6 +1,11 @@
-//
-// Created by lzt11 on 2021/12/28.
-//
+/*
+ * @Author: lzt
+ * @Date: 2022-1-15 17:34
+ * @LastEditTime: 2022-1-15 17:34
+ * @LastEditors: lzt
+ * @Description: As a nginx module, in order to encrypt the parameters of the cookie to improve the security of the backend server.
+ * @FilePath: /nginx-cookie-encrypt-module/cookie-encrypt-module.c
+ */
 
 //  location xxx{
 //      cookie_encrypt on | off;

@@ -1,6 +1,11 @@
-//
-// Created by lzt11 on 2022/1/11.
-//
+/*
+ * @Author: lzt
+ * @Date: 2022-1-15 17:34
+ * @LastEditTime: 2022-1-15 17:34
+ * @LastEditors: lzt
+ * @Description: save small tools func header.
+ * @FilePath: /nginx-cookie-encrypt-module/cookie_encrypt_misc.h
+ */
 #include "cookie_encrypt_misc.h"
 #include "openssl/pem.h"
 #include "openssl/aes.h"
