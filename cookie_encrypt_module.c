@@ -14,12 +14,18 @@ extern ngx_module_t ngx_http_cookie_encrypt_module;
 
 typedef struct {
     ngx_flag_t enable;
+    ngx_str_t key;
+    ngx_str_t iv;
+    ngx_flag_t is_strict;
 } ngx_http_cookie_loc_conf_t;
 
 /* the configuration structure */
 static void *ngx_http_cookie_create_loc_conf(ngx_conf_t *cf);
 
 static ngx_int_t ngx_http_cookie_init(ngx_conf_t *cf);
+
+static char *ngx_http_cookie_encrypt_key(ngx_conf_t *cf,ngx_command_t *cmd,void *conf);
+static char *ngx_http_cookie_encrypt_iv(ngx_conf_t *cf,ngx_command_t *cmd,void *conf);
 
 static ngx_command_t ngx_http_cookie_commands[] = {
         {
@@ -30,8 +36,56 @@ static ngx_command_t ngx_http_cookie_commands[] = {
                 offsetof(ngx_http_cookie_loc_conf_t, enable),
                 NULL
         },
+        {
+                ngx_string("cookie_encrypt_key"),
+                NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
+                ngx_http_cookie_encrypt_key,
+                NGX_HTTP_LOC_CONF_OFFSET,
+                offsetof(ngx_http_cookie_loc_conf_t, key),
+                NULL
+        },
+        {
+                ngx_string("cookie_encrypt_iv"),
+                NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
+                ngx_http_cookie_encrypt_iv,
+                NGX_HTTP_LOC_CONF_OFFSET,
+                offsetof(ngx_http_cookie_loc_conf_t, iv),
+                NULL
+        },
         ngx_null_command
 };
+
+static char *ngx_http_cookie_encrypt_key(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
+    ngx_http_cookie_loc_conf_t* local_conf;
+    local_conf = conf;
+    // reset
+    ngx_str_null(&local_conf->key);
+
+    char *rv = NULL;
+    rv = ngx_conf_set_str_slot(cf,cmd,conf);
+    if(local_conf->key.len != 32){
+        ngx_conf_log_error(NGX_LOG_ERR,cf,0,"KEY length does not meet requirements, KEY length should be 32.");
+        return NGX_CONF_ERROR;
+    }
+    ngx_conf_log_error(NGX_LOG_DEBUG,cf,0,"encrypt cookie key:%s",local_conf->key.data);
+    return rv;
+};
+
+static char *ngx_http_cookie_encrypt_iv(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
+    ngx_http_cookie_loc_conf_t* local_conf;
+    local_conf = conf;
+    // reset
+    ngx_str_null(&local_conf->iv);
+
+    char *rv = NULL;
+    rv = ngx_conf_set_str_slot(cf,cmd,conf);
+    if(local_conf->iv.len != 16){
+        ngx_conf_log_error(NGX_LOG_ERR,cf,0,"IV length does not meet requirements, IV length should be 16.");
+        return NGX_CONF_ERROR;
+    }
+    ngx_conf_log_error(NGX_LOG_DEBUG,cf,0,"encrypt cookie iv:%s",local_conf->iv.data);
+    return rv;
+}
 
 // 初始化配置文件
 static void *ngx_http_cookie_create_loc_conf(ngx_conf_t *cf) {
@@ -40,6 +94,13 @@ static void *ngx_http_cookie_create_loc_conf(ngx_conf_t *cf) {
     if (conf == NULL) {
         return NULL;
     }
+    // TODO 随机生成key和iv
+//    ngx_str_null(&conf->key);
+//    ngx_str_null(&conf->iv);
+    ngx_str_set(&conf->key,KEY);
+    ngx_str_set(&conf->iv,IV);
+
+    conf->is_strict = NGX_CONF_UNSET;
     conf->enable = NGX_CONF_UNSET;
     return conf;
 }
@@ -80,6 +141,7 @@ static ngx_int_t ngx_cookie_decrypt_handler(ngx_http_request_t *r) {
     cf = ngx_http_get_module_loc_conf(r, ngx_http_cookie_encrypt_module);
     if (cf->enable) {
         ngx_log_error(NGX_LOG_DEBUG, r->connection->log, 0, "enable decrypt!");
+
         ngx_table_elt_t *elt;
         ngx_list_part_t *part;
         ngx_uint_t i;
@@ -158,7 +220,7 @@ static ngx_int_t ngx_cookie_decrypt_handler(ngx_http_request_t *r) {
                         //printf("cookie_arg_decode len -> %zu, data -> %s\n",cookie_arg_decode.len,cookie_arg_decode.data);
                         // 解码end
                         // 解密
-                        if(aes_decrypt(cookie_arg_decode.data, cookie_arg_decrypt.data, (u_char *) KEY, (u_char *) IV) == 0){
+                        if(aes_decrypt(cookie_arg_decode.data, cookie_arg_decrypt.data, cf->key.data, cf->iv.data) == 0){
                             ngx_log_error(NGX_LOG_ERR,r->connection->log,0,"cookie decrypt fail!");
                             cp = ngx_copy(cp, cookie_arg.data, cookie_arg.len);
                             begin = start + 1;
@@ -263,7 +325,7 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r) {
                     cap = ngx_cpymem(cookie_arg.data, cookie_s.data + start, cookie_arg.len);
                     ngx_memcpy(cap, "\0", 1);
                     //printf("cookie_arg -> %s\n",cookie_arg.data);
-                    if(aes_encrypt(cookie_arg.data, cookie_arg_encrypt.data, (u_char *) KEY, (u_char *) IV) == 1){
+                    if(aes_encrypt(cookie_arg.data, cookie_arg_encrypt.data, cf->key.data, cf->iv.data) == 0){
                         ngx_log_error(NGX_LOG_ERR,r->connection->log,0,"can't encrypt cookie arg(due to encrypt)");
                         continue;
                     }
