@@ -29,14 +29,16 @@ static void *ngx_http_cookie_create_loc_conf(ngx_conf_t *cf);
 
 static ngx_int_t ngx_http_cookie_init(ngx_conf_t *cf);
 
-static char *ngx_http_cookie_encrypt_key(ngx_conf_t *cf,ngx_command_t *cmd,void *conf);
-static char *ngx_http_cookie_encrypt_iv(ngx_conf_t *cf,ngx_command_t *cmd,void *conf);
-static char *ngx_http_cookie_encrypt(ngx_conf_t *cf,ngx_command_t *cmd,void *conf);
+static char *ngx_http_cookie_encrypt_key(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+
+static char *ngx_http_cookie_encrypt_iv(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+
+static char *ngx_http_cookie_encrypt(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 static ngx_command_t ngx_http_cookie_commands[] = {
         {
                 ngx_string("cookie_encrypt"),
-                NGX_HTTP_LOC_CONF | NGX_CONF_FLAG | NGX_CONF_TAKE1,
+                NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
                 ngx_http_cookie_encrypt,
                 NGX_HTTP_LOC_CONF_OFFSET,
                 offsetof(ngx_http_cookie_loc_conf_t, enable),
@@ -60,11 +62,12 @@ static ngx_command_t ngx_http_cookie_commands[] = {
         },
         ngx_null_command
 };
-static char *ngx_http_cookie_encrypt(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
-    ngx_http_cookie_loc_conf_t* local_conf;
+
+static char *ngx_http_cookie_encrypt(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+    ngx_http_cookie_loc_conf_t *local_conf;
     local_conf = conf;
 
-    ngx_str_t        *value;
+    ngx_str_t *value;
 
     value = cf->args->elts;
 
@@ -88,35 +91,35 @@ static char *ngx_http_cookie_encrypt(ngx_conf_t *cf,ngx_command_t *cmd,void *con
     return NGX_CONF_OK;
 }
 
-static char *ngx_http_cookie_encrypt_key(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
-    ngx_http_cookie_loc_conf_t* local_conf;
+static char *ngx_http_cookie_encrypt_key(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+    ngx_http_cookie_loc_conf_t *local_conf;
     local_conf = conf;
     // reset
     ngx_str_null(&local_conf->key);
 
     char *rv = NULL;
-    rv = ngx_conf_set_str_slot(cf,cmd,conf);
-    if(local_conf->key.len != 32){
-        ngx_conf_log_error(NGX_LOG_ERR,cf,0,"KEY length does not meet requirements, KEY length should be 32.");
+    rv = ngx_conf_set_str_slot(cf, cmd, conf);
+    if (local_conf->key.len != 32) {
+        ngx_conf_log_error(NGX_LOG_ERR, cf, 0, "KEY length does not meet requirements, KEY length should be 32.");
         return NGX_CONF_ERROR;
     }
-    ngx_conf_log_error(NGX_LOG_DEBUG,cf,0,"encrypt cookie key:%s",local_conf->key.data);
+    ngx_conf_log_error(NGX_LOG_DEBUG, cf, 0, "encrypt cookie key:%s", local_conf->key.data);
     return rv;
 };
 
-static char *ngx_http_cookie_encrypt_iv(ngx_conf_t *cf,ngx_command_t *cmd,void *conf){
-    ngx_http_cookie_loc_conf_t* local_conf;
+static char *ngx_http_cookie_encrypt_iv(ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+    ngx_http_cookie_loc_conf_t *local_conf;
     local_conf = conf;
     // reset
     ngx_str_null(&local_conf->iv);
 
     char *rv = NULL;
-    rv = ngx_conf_set_str_slot(cf,cmd,conf);
-    if(local_conf->iv.len != 16){
-        ngx_conf_log_error(NGX_LOG_ERR,cf,0,"IV length does not meet requirements, IV length should be 16.");
+    rv = ngx_conf_set_str_slot(cf, cmd, conf);
+    if (local_conf->iv.len != 16) {
+        ngx_conf_log_error(NGX_LOG_ERR, cf, 0, "IV length does not meet requirements, IV length should be 16.");
         return NGX_CONF_ERROR;
     }
-    ngx_conf_log_error(NGX_LOG_DEBUG,cf,0,"encrypt cookie iv:%s",local_conf->iv.data);
+    ngx_conf_log_error(NGX_LOG_DEBUG, cf, 0, "encrypt cookie iv:%s", local_conf->iv.data);
     return rv;
 }
 
@@ -130,8 +133,8 @@ static void *ngx_http_cookie_create_loc_conf(ngx_conf_t *cf) {
     // TODO 随机生成key和iv
 //    ngx_str_null(&conf->key);
 //    ngx_str_null(&conf->iv);
-    ngx_str_set(&conf->key,KEY);
-    ngx_str_set(&conf->iv,IV);
+    ngx_str_set(&conf->key, KEY);
+    ngx_str_set(&conf->iv, IV);
 
     conf->is_strict = NGX_CONF_UNSET;
     conf->enable = NGX_CONF_UNSET;
@@ -240,10 +243,10 @@ static ngx_int_t ngx_cookie_decrypt_handler(ngx_http_request_t *r) {
                         //printf("cookie_arg -> %s\n",cookie_arg.data);
                         // 赋值end
                         // 解码
-                        base64_decode(cookie_arg.data,cookie_arg_decode.data);
-                        if((cookie_arg_decode.len = ngx_strlen(cookie_arg_decode.data)) == 0){
-                            ngx_log_error(NGX_LOG_ERR,r->connection->log,0,"can't decode cookie arg");
-                            if(!cf->is_strict){
+                        base64_decode(cookie_arg.data, cookie_arg_decode.data);
+                        if ((cookie_arg_decode.len = ngx_strlen(cookie_arg_decode.data)) == 0) {
+                            if (!cf->is_strict) {
+                                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "can't decode cookie arg!");
                                 cp = ngx_copy(cp, cookie_s.data + begin, start - begin);
                                 cp = ngx_copy(cp, cookie_arg.data, cookie_arg.len);
                             }
@@ -255,9 +258,10 @@ static ngx_int_t ngx_cookie_decrypt_handler(ngx_http_request_t *r) {
                         //printf("cookie_arg_decode len -> %zu, data -> %s\n",cookie_arg_decode.len,cookie_arg_decode.data);
                         // 解码end
                         // 解密
-                        if(aes_decrypt(cookie_arg_decode.data, cookie_arg_decrypt.data, cf->key.data, cf->iv.data) == 0){
-                            ngx_log_error(NGX_LOG_ERR,r->connection->log,0,"cookie decrypt fail!");
-                            if(!cf->is_strict){
+                        if (aes_decrypt(cookie_arg_decode.data, cookie_arg_decrypt.data, cf->key.data, cf->iv.data) ==
+                            0) {
+                            if (!cf->is_strict) {
+                                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "cookie decrypt fail!");
                                 cp = ngx_copy(cp, cookie_s.data + begin, start - begin);
                                 cp = ngx_copy(cp, cookie_arg.data, cookie_arg.len);
                             }
@@ -269,7 +273,6 @@ static ngx_int_t ngx_cookie_decrypt_handler(ngx_http_request_t *r) {
 
                         //success
                         cp = ngx_copy(cp, cookie_s.data + begin, start - begin);
-                        //printf("decrypt success!\n");
                         cookie_arg_decrypt.len = ngx_strlen(cookie_arg_decrypt.data);
                         cp = ngx_copy(cp, cookie_arg_decrypt.data, cookie_arg_decrypt.len);
                         //printf( "replacing decrypt cookie -> %s\n",encrypt_cookie);
@@ -300,7 +303,6 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r) {
         ngx_table_elt_t *elt;
         ngx_list_part_t *part;
         ngx_uint_t i;
-        // TODO AES加密
         part = &r->headers_out.headers.part;
         elt = part->elts;
 
@@ -364,19 +366,19 @@ static ngx_int_t ngx_http_encrypt_filter(ngx_http_request_t *r) {
                     cap = ngx_cpymem(cookie_arg.data, cookie_s.data + start, cookie_arg.len);
                     ngx_memcpy(cap, "\0", 1);
                     //printf("cookie_arg -> %s\n",cookie_arg.data);
-                    if(aes_encrypt(cookie_arg.data, cookie_arg_encrypt.data, cf->key.data, cf->iv.data) == 0){
-                        ngx_log_error(NGX_LOG_ERR,r->connection->log,0,"can't encrypt cookie arg(due to encrypt)");
+                    if (aes_encrypt(cookie_arg.data, cookie_arg_encrypt.data, cf->key.data, cf->iv.data) == 0) {
+                        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "can't encrypt cookie arg!(due to encrypt)");
                         continue;
                     }
-                    if((cookie_arg_encrypt.len = ngx_strlen(cookie_arg_encrypt.data))==0){
-                        ngx_log_error(NGX_LOG_ERR,r->connection->log,0,"can't encrypt cookie arg(due to length)");
+                    if ((cookie_arg_encrypt.len = ngx_strlen(cookie_arg_encrypt.data)) == 0) {
+                        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "can't encrypt cookie arg！(due to length)");
                         continue;
                     }
                     // 加密 end
                     // 编码
                     base64_encode(cookie_arg_encrypt.data, cookie_arg_encode.data);
-                    if((cookie_arg_encode.len = ngx_strlen(cookie_arg_encode.data))==0){
-                        ngx_log_error(NGX_LOG_ERR,r->connection->log,0,"can't encode cookie arg");
+                    if ((cookie_arg_encode.len = ngx_strlen(cookie_arg_encode.data)) == 0) {
+                        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "can't encode cookie arg!");
                         continue;
                     }
                     //printf("cookie_arg_encode -> %s",cookie_arg_encode.data);

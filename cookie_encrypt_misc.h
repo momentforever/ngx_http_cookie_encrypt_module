@@ -14,10 +14,13 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-int aes_encrypt(unsigned char* str_in,unsigned char* str_out,unsigned char *key, unsigned char *iv);
-int aes_decrypt(unsigned char* str_in, unsigned char* str_out,unsigned char* key,unsigned char* iv);
-int base64_decode(unsigned char *in_str,unsigned char *out_str);
-int base64_encode(unsigned char *in_str,unsigned char *out_str);
+int aes_encrypt(unsigned char *str_in, unsigned char *str_out, unsigned char *key, unsigned char *iv);
+
+int aes_decrypt(unsigned char *str_in, unsigned char *str_out, unsigned char *key, unsigned char *iv);
+
+int base64_decode(unsigned char *in_str, unsigned char *out_str);
+
+int base64_encode(unsigned char *in_str, unsigned char *out_str);
 
 /*
 这个是你自己写的一个十六字节的秘钥,aes加密解密都用这同一个
