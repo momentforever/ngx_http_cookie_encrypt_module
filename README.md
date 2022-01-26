@@ -1,5 +1,9 @@
 # ngx_http_cookie_encrypt_module
 
+## Suitable for Nginx Version
+
+nginx 1.19
+
 ## Description
 
 As a nginx module.
@@ -60,7 +64,8 @@ cookie aes iv(Offset),length must be 16.
 ### Feature
 
 1. Expand more AES methods.
-2. put KEY and IV to conf and ohter optimization. (finish)
+2. Put KEY and IV to conf and ohter optimization. (finish)
 3. Add strict mode. (if can't be encrypted, thtrow away this cookie) (finish)
-4. replace better key and iv.
-5. ...
+4. Replace better key and iv.
+5. Adapt to more nginx versions
+6. ...
